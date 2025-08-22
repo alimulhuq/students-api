@@ -1,5 +1,9 @@
-storage/storage.db
-.gitignore
+# Ignore DB file
+/storage/storage.db
+
+# Ignore config directory
+/config/
+
+# Ignore Go dependency files
 go.mod
 go.sum
-/config
