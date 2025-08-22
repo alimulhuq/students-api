@@ -1,0 +1,43 @@
+package student
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+
+	"github.com/alimulhuq/students-api/internal/types"
+	"github.com/alimulhuq/students-api/internal/types/utils/response"
+	"github.com/go-playground/validator/v10"
+)
+
+func New() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var student types.Student
+
+		err := json.NewDecoder(r.Body).Decode(&student)
+
+		if errors.Is(err, io.EOF) {
+			response.Writejson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("empty body")))
+			return
+		}
+
+		if err != nil {
+			response.Writejson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+
+		slog.Info("Creating a student detail")
+
+		// request validation
+		if err := validator.New().Struct(student); err != nil {
+			validateErrs := err.(validator.ValidationErrors)
+			response.Writejson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
+			return
+		}
+
+		response.Writejson(w, http.StatusCreated, map[string]string{"success": "OK"})
+	}
+}
