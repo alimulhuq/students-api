@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/alimulhuq/students-api/internal/storage"
 	"github.com/alimulhuq/students-api/internal/types"
@@ -53,5 +54,29 @@ func New(storage storage.Storage) http.HandlerFunc {
 		}
 
 		response.Writejson(w, http.StatusCreated, map[string]any{"success": "OK", "id": lastId})
+	}
+}
+
+func GetById(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		slog.Info("Getting a student", slog.String("id", id))
+
+		intID, err := strconv.ParseInt(id, 10, 64)
+
+		if err != nil {
+			response.Writejson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+
+		student, err := storage.GetStudentById(intID)
+
+		if err != nil {
+			slog.Error("error getting user", slog.String("id", id))
+			response.Writejson(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+		}
+
+		response.Writejson(w, http.StatusOK, student)
 	}
 }
